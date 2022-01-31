@@ -36,10 +36,10 @@ fn main() {
             )
         )
     );
-    let config = load_config();
+    // /*FIXME_later*/ let config = load_config();
     let coshf_history: PathBuf = config_dir().join(".cosh-history");
     let history_str = coshf_history.to_string_lossy().to_string().replace("\\", "/");
-    let history = FileBackedHistory::with_file(config.history_capacity as usize, coshf_history).unwrap();
+    let history = FileBackedHistory::with_file(25, coshf_history).unwrap();
     let mut rl = Reedline::create().unwrap().with_history(Box::new(history)).unwrap();
     loop {
         let input = rl.read_line(&Cosh::default());
@@ -56,6 +56,9 @@ fn main() {
                 }
                 let args = parts;
                 match command {
+                    "pwd" => {
+                        println!("{}", current_dir().unwrap().to_string_lossy());
+                    }
                     "history" => {
                         println!("Printing history from {}", history_str);
                         rl.print_history().unwrap();
