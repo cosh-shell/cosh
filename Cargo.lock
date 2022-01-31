@@ -69,12 +69,14 @@ name = "cosh"
 version = "1.0.0"
 dependencies = [
  "clearscreen",
+ "directories",
  "dirs 4.0.0",
  "guess_host_triple",
  "libc",
  "nix 0.23.1",
  "reedline",
  "rustc_version_runtime",
+ "serde",
  "toml",
  "whoami",
  "winapi",
@@ -106,6 +108,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3a6966607622438301997d3dac0d2f6e9a90c68bb6bc1785ea98456ab93c0507"
 dependencies = [
  "winapi",
+]
+
+[[package]]
+name = "directories"
+version = "4.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f51c5d4ddabd36886dd3e1438cb358cdcb0d7c499cb99cb4ac2e38e18b5cb210"
+dependencies = [
+ "dirs-sys",
 ]
 
 [[package]]

@@ -1,13 +1,15 @@
 extern crate core;
 
 use std::env::*;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use clearscreen::clear;
-use reedline::{Reedline, Signal};
+use reedline::{FileBackedHistory, Reedline, Signal};
+use std::string::String;
 use print::*;
 use yansi::Paint;
 use crate::builtin::ls;
+use crate::config::{config_dir, load_config};
 
 mod print;
 mod builtin;
@@ -24,7 +26,6 @@ pub const HEADER: &str = r#"
 
 fn main() {
     enable_virtual_terminal_processing();
-    let mut rl = Reedline::create().unwrap();
     println!(
         "{}cosh 1.0.0 {}\n",
         HEADER,
@@ -35,17 +36,37 @@ fn main() {
             )
         )
     );
+    let config = load_config();
+    let coshf_history: PathBuf = config_dir().join(".cosh-history");
+    let history_str = coshf_history.to_string_lossy().to_string().replace("\\", "/");
+    let history = FileBackedHistory::with_file(config.history_capacity as usize, coshf_history).unwrap();
+    let mut rl = Reedline::create().unwrap().with_history(Box::new(history)).unwrap();
     loop {
-        // print!("{}", prompt);
-        // stdout().flush().unwrap();
         let input = rl.read_line(&Cosh::default());
         match input {
             Ok(Signal::Success(res)) => {
                 let mut parts = res.trim().split_whitespace();
                 let p = parts.next();
-                let command = p.unwrap();
+                let command : &str;
+                match p {
+                    None => { continue; }
+                    Some(e) => {
+                        command = e;
+                    }
+                }
                 let args = parts;
                 match command {
+                    "history" => {
+                        println!("Printing history from {}", history_str);
+                        rl.print_history().unwrap();
+                    }
+                    "echo" => {
+                        let mut target = String::new();
+                        for x in args {
+                            target.push_str(&*(x.to_owned() + " "));
+                        }
+                        println!("{}", target.trim());
+                    }
                     "help" => {
                         print_help();
                     }

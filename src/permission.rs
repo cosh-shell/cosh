@@ -10,7 +10,6 @@ pub fn is_elevated() -> bool {
     use winapi::um::winnt::HANDLE;
     use winapi::um::winnt::TOKEN_ELEVATION;
 
-    use libc;
     use std::mem;
     use winapi::ctypes::c_void;
     use winapi::um::winnt::TOKEN_QUERY;

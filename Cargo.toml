@@ -14,7 +14,9 @@ clearscreen = "1.0.9"
 reedline = "0.2.0"
 toml = "0.5.8"
 dirs = "4.0.0"
+serde = "1.0.136"
 libc = "0.2.116"
+directories = "4.0.1"
 
 [target.'cfg(windows)'.dependencies]
 winapi-util = "0.1.5"
