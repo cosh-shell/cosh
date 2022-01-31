@@ -83,7 +83,7 @@ fn main() {
                             err_ln(format!("cosh: {}", e));
                         }
                     },
-                    "clear" => {
+                    "cls" => {
                         clear().unwrap();
                     }
                     "ls" => {
@@ -104,7 +104,7 @@ fn main() {
                 }
             }
             Ok(Signal::CtrlC) | Ok(Signal::CtrlD) => {
-                rl.print_crlf().unwrap();
+                //rl.print_crlf().unwrap();
             }
             Ok(Signal::CtrlL) => {
                 clear().unwrap();

@@ -3,8 +3,6 @@ name = "cosh"
 version = "1.0.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 rustc_version_runtime = "0.2.1"
 guess_host_triple = "0.1.3"
