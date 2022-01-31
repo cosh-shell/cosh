@@ -1,8 +1,11 @@
 use std::borrow::Cow;
 use std::env::current_dir;
+use std::path::PathBuf;
+use dirs::home_dir;
 use reedline::{Prompt, PromptEditMode, PromptHistorySearch, PromptHistorySearchStatus};
 use whoami::{hostname, username};
 use yansi::Paint;
+use crate::permission::is_elevated;
 
 /// Prints in stderr() with ANSI and a newline.
 pub fn err_ln(msg: String) {
@@ -18,11 +21,16 @@ pub fn err(msg: &str) {
 impl Prompt for Cosh {
 
     fn render_prompt(&self, _screen_width: usize) -> Cow<str> {
-        Cow::from(format!("{} {}", Paint::yellow(current_dir().unwrap().to_string_lossy()), Paint::green(username() + "@" + &*hostname())))
+        let x = current_dir().unwrap().to_string_lossy().replace("\\", "/").replace(&home_dir().unwrap_or(PathBuf::new()).to_string_lossy().to_string(), "~").to_string();
+        Cow::from(format!("{} {}", Paint::yellow(x), Paint::green(username() + "@" + &*hostname())))
     }
 
     fn render_prompt_indicator(&self, _edit_mode: PromptEditMode) -> Cow<str> {
-        " $ ".into()
+        if is_elevated() {
+            " # ".into()
+        } else {
+            " $ ".into()
+        }
     }
 
     fn render_prompt_multiline_indicator(&self) -> Cow<str> {

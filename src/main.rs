@@ -11,6 +11,8 @@ use crate::builtin::ls;
 
 mod print;
 mod builtin;
+mod config;
+mod permission;
 
 pub const HEADER: &str = r#"
                   _
@@ -57,7 +59,7 @@ fn main() {
                             err_ln(format!("cosh: {}", e));
                         }
                     },
-                    "cls" | "clear" => {
+                    "clear" => {
                         clear().unwrap();
                     }
                     "ls" => {
@@ -71,14 +73,7 @@ fn main() {
                         match child {
                             Ok(mut child) => { child.wait().unwrap(); },
                             Err(e) => {
-                                match e.to_string().as_str() {
-                                    "" => {
-                                        err_ln(format!("cosh: cannot find program '{}'", command))
-                                    }
-                                    default => {
-                                        err_ln(format!("cosh: {}", default))
-                                    }
-                                }
+                                err_ln(format!("cosh: {}", e));
                             },
                         };
                     }

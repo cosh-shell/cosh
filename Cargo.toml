@@ -12,6 +12,13 @@ whoami = "1.2.1"
 yansi = "0.5.0"
 clearscreen = "1.0.9"
 reedline = "0.2.0"
+toml = "0.5.8"
+dirs = "4.0.0"
+libc = "0.2.116"
 
 [target.'cfg(windows)'.dependencies]
 winapi-util = "0.1.5"
+winapi = { version = "0.3.9", features = ["winuser", "handleapi", "processthreadsapi", "securitybaseapi"] }
+
+[target.'cfg(unix)'.dependencies]
+nix = "0.23.1"
