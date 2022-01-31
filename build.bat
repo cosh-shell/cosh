@@ -1,0 +1,3 @@
+echo BUILDING release and debug...
+cargo build --package cosh --bin cosh
+cargo build --package cosh --bin cosh --release
