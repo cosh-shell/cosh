@@ -1,15 +1,17 @@
-extern crate core;
-
+use std::borrow::BorrowMut;
 use std::env::*;
+use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use clearscreen::clear;
-use reedline::{FileBackedHistory, Reedline, Signal};
+use reedline::{DefaultCompleter, DefaultHighlighter, DefaultHinter, FileBackedHistory, Reedline, Signal};
 use std::string::String;
+use nu_ansi_term::Color::DarkGray;
+use nu_ansi_term::{Color, Style};
 use print::*;
 use yansi::Paint;
-use crate::builtin::ls;
-use crate::config::{config_dir, load_config};
+use crate::builtin::{autocomplete_targets, ls};
+use crate::config::config_dir;
 
 mod print;
 mod builtin;
@@ -40,12 +42,28 @@ fn main() {
     let coshf_history: PathBuf = config_dir().join(".cosh-history");
     let history_str = coshf_history.to_string_lossy().to_string().replace("\\", "/");
     let history = FileBackedHistory::with_file(25, coshf_history).unwrap();
-    let mut rl = Reedline::create().unwrap().with_history(Box::new(history)).unwrap();
+    let exe_vec = autocomplete_targets();
+    let mut hil = DefaultHighlighter::new(exe_vec.clone());
+    hil.change_colors(Color::LightPurple, Color::White, Color::White); // highlight special commands
+    let mut rl = Reedline::create()
+        .unwrap()
+        .with_history(Box::new(history))
+        .unwrap()
+        .with_hinter(Box::new(
+            DefaultHinter::default().with_inside_line().with_completer(Box::new(DefaultCompleter::new(exe_vec.clone()))).with_style(Style::new().fg(DarkGray))
+        ))
+        .with_highlighter(Box::new(hil));
+
     loop {
         let input = rl.read_line(&Cosh::default());
         match input {
             Ok(Signal::Success(res)) => {
-                let mut parts = res.trim().split_whitespace();
+                let may_have_comments = res.trim();
+                if may_have_comments.is_empty() {
+                    continue;
+                }
+                may_have_comments.split("#").next().unwrap();
+                let mut parts = may_have_comments.split("#").next().unwrap().split_whitespace();
                 let p = parts.next();
                 let command : &str;
                 match p {
@@ -56,12 +74,40 @@ fn main() {
                 }
                 let args = parts;
                 match command {
+                    "autocp" => {
+                        println!("cosh: use `autocp-ref` to refresh autocompletion indexes.");
+                    }
+                    "autocp-ref" => {
+                        let mut hil = DefaultHighlighter::new(exe_vec.clone());
+                        hil.change_colors(Color::LightPurple, Color::LightGray, Color::LightGray); // highlight special commands
+                        rl = Reedline::create()
+                            .unwrap()
+                            .with_history(Box::new(FileBackedHistory::with_file(25, history_str.parse().unwrap()).unwrap()))
+                            .unwrap()
+                            .with_hinter(Box::new(
+                                DefaultHinter::default().with_inside_line().with_completer(Box::new(DefaultCompleter::new(exe_vec.clone()))).with_style(Style::new().fg(DarkGray))
+                            ))
+                            .with_highlighter(Box::new(hil));
+                        println!("cosh: refreshed indexes");
+                    }
                     "pwd" => {
                         println!("{}", current_dir().unwrap().to_string_lossy());
                     }
                     "history" => {
-                        println!("Printing history from {}", history_str);
-                        rl.print_history().unwrap();
+                        if args.peekable().peek().unwrap_or(&"") == &"clear" {
+                            match File::create(&history_str) {
+                                Ok(_) => {
+                                    println!("cosh: history file ({}) emptied", history_str);
+                                }
+                                Err(e) => {
+                                    err_ln(format!("cosh: could not empty ({})", history_str));
+                                    err_ln(format!("cosh: error - {}", e));
+                                }
+                            }
+                        } else {
+                            println!("cosh: printing history from {}", history_str);
+                            rl.print_history().unwrap();
+                        }
                     }
                     "echo" => {
                         let mut target = String::new();
@@ -74,7 +120,7 @@ fn main() {
                         print_help();
                     }
                     "cosh" => {
-                        err_ln("cosh: you are already in cosh, type `help` for help.".to_string());
+                        err_ln("cosh: if we let you do this, cosh would break :c".to_string());
                     }
                     "cd" => {
                         let new_dir = args.peekable().peek().map_or("/", |x| *x);
@@ -87,7 +133,26 @@ fn main() {
                         clear().unwrap();
                     }
                     "ls" => {
-                        ls(args.peekable().peek().map_or(".", |x| *x));
+                        let mut dir = String::new();
+                        let mut proc_args = Vec::<String>::new();
+                        for arg in args.peekable().borrow_mut() {
+                            if arg.starts_with("-") {
+                                if arg.starts_with("--") {
+                                    err_ln("cosh: the internal `ls` implementation only recognizes short flags (-l, etc)".to_string());
+                                    continue;
+                                } else {
+                                    proc_args.push(arg.trim().to_owned());
+                                }
+                            } else {
+                                if dir.is_empty() {
+                                    dir = arg.trim().to_owned();
+                                } else {
+                                    err_ln("cosh: `ls` expected one parameter".to_string());
+                                    continue;
+                                }
+                            }
+                        }
+                        ls(&*dir, proc_args);
                     }
                     "exit" => break,
                     command => {
@@ -103,9 +168,7 @@ fn main() {
                     }
                 }
             }
-            Ok(Signal::CtrlC) | Ok(Signal::CtrlD) => {
-                //rl.print_crlf().unwrap();
-            }
+            Ok(Signal::CtrlC) | Ok(Signal::CtrlD) => {}
             Ok(Signal::CtrlL) => {
                 clear().unwrap();
             }

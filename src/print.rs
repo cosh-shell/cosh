@@ -84,6 +84,19 @@ Help ......................................
 
     ls [dir] - lists the given directory,
              | defaults to the current one
-             | if not specified.
+             | if not specified. Supported
+             | flags are `-l`, `-F` and `-a`.
+
+    cls      - clears the screen. This works like
+             | (CTRL+L).
+
+    history  - prints the current history.
+             | `history clear` clears the
+             | history.
+
+    echo     - echoes the given arguments.
+    pwd      - prints the current working dir.
+    exit     - exits cosh.
+
 --------------------------------------------
 "#;

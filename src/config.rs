@@ -30,6 +30,7 @@ pub fn config_dir() -> PathBuf {
 
 /// Attempts to load the config. If not existing, creates a new one and
 /// returns [`Configuration::default()`].
+#[allow(dead_code)]
 pub fn load_config() -> Configuration {
     if !config_dir().join("cosh.toml").exists() {
         match File::create(config_dir().join("cosh.toml")) {
