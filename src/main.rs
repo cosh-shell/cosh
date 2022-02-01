@@ -43,16 +43,13 @@ fn main() {
     let history_str = coshf_history.to_string_lossy().to_string().replace("\\", "/");
     let history = FileBackedHistory::with_file(25, coshf_history).unwrap();
     let exe_vec = autocomplete_targets();
-    let mut hil = DefaultHighlighter::new(exe_vec.clone());
-    hil.change_colors(Color::LightPurple, Color::White, Color::White); // highlight special commands
     let mut rl = Reedline::create()
         .unwrap()
         .with_history(Box::new(history))
         .unwrap()
         .with_hinter(Box::new(
             DefaultHinter::default().with_inside_line().with_completer(Box::new(DefaultCompleter::new(exe_vec.clone()))).with_style(Style::new().fg(DarkGray))
-        ))
-        .with_highlighter(Box::new(hil));
+        ));
 
     loop {
         let input = rl.read_line(&Cosh::default());
@@ -78,16 +75,13 @@ fn main() {
                         println!("cosh: use `autocp-ref` to refresh autocompletion indexes.");
                     }
                     "autocp-ref" => {
-                        let mut hil = DefaultHighlighter::new(exe_vec.clone());
-                        hil.change_colors(Color::LightPurple, Color::LightGray, Color::LightGray); // highlight special commands
                         rl = Reedline::create()
                             .unwrap()
                             .with_history(Box::new(FileBackedHistory::with_file(25, history_str.parse().unwrap()).unwrap()))
                             .unwrap()
                             .with_hinter(Box::new(
                                 DefaultHinter::default().with_inside_line().with_completer(Box::new(DefaultCompleter::new(exe_vec.clone()))).with_style(Style::new().fg(DarkGray))
-                            ))
-                            .with_highlighter(Box::new(hil));
+                            ));
                         println!("cosh: refreshed indexes");
                     }
                     "pwd" => {
