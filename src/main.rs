@@ -2,10 +2,12 @@ use std::borrow::BorrowMut;
 use std::env::*;
 use std::fs::File;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
+use std::str::SplitWhitespace;
 use clearscreen::clear;
 use reedline::{DefaultCompleter, DefaultHighlighter, DefaultHinter, FileBackedHistory, Reedline, Signal};
 use std::string::String;
+use libc::{SIG_DFL, SIGINT};
 use nu_ansi_term::Color::DarkGray;
 use nu_ansi_term::{Color, Style};
 use print::*;
@@ -150,15 +152,7 @@ fn main() {
                     }
                     "exit" => break,
                     command => {
-                        let child = Command::new(command)
-                            .args(args)
-                            .spawn();
-                        match child {
-                            Ok(mut child) => { child.wait().unwrap(); },
-                            Err(e) => {
-                                err_ln(format!("cosh: {}", e));
-                            },
-                        };
+                        execute_command(command, args);
                     }
                 }
             }
@@ -170,6 +164,26 @@ fn main() {
         }
     }
     disable_virtual_terminal_processing();
+}
+
+fn execute_command(command: &str, args: SplitWhitespace) {
+    #[cfg(unix)]
+    use std::os::unix::process::CommandExt;
+    let child_temp = Command::new(command).args(args);
+    #[cfg(unix)]
+    child_temp.before_exec(|| {
+        unsafe {
+            libc::signal(SIGINT, SIG_DFL);
+            libc::signal(SIGQUIT, SIG_DFL);
+        }
+    });
+    let child = child_temp.spawn();
+    match child {
+        Ok(mut child) => { child.wait().unwrap(); },
+        Err(e) => {
+            err_ln(format!("cosh: {}", e));
+        },
+    };
 }
 
 #[cfg(windows)]

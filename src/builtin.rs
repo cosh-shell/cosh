@@ -21,7 +21,7 @@ fn is_hidden(path: &Path) -> bool {
 
 #[cfg(unix)]
 fn is_hidden(path: &Path) -> bool {
-    path.file_name()?.to_string_lossy().starts_with(".")
+    path.file_name().unwrap().to_string_lossy().starts_with(".")
 }
 
 /// Prints a listing of the current files. This is equivalent to Windows' `dir`.
