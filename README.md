@@ -1,4 +1,5 @@
 # `cosh` Comfortably Shell
+![alt text](https://github.com/cosh-shell/cosh/blob/main/demo_1.png?raw=true)
 > A cross-platform and convenient shell written in Rust.
 
 ## Conveniences
