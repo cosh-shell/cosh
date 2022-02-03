@@ -3,8 +3,7 @@
 > A cross-platform and convenient shell written in Rust.
 
 ## Conveniences
-`cosh` now autocompletes to executables in `$PATH`, and `cosh` built-ins are highlighted in
-purple, although partial inclusion still gets it highlighted.
+`cosh` now autocompletes to executables in `$PATH`, and pressing tab will complete them.
 
 ## Commands & Syntax
 `cosh`'s syntax is a mix between two shells: Windows' `cmd.exe` and the classic UNIX `sh`.

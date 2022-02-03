@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::str::SplitWhitespace;
 use clearscreen::clear;
-use reedline::{DefaultCompleter, DefaultHighlighter, DefaultHinter, FileBackedHistory, Reedline, Signal};
+use reedline::{DefaultCompleter, DefaultCompletionActionHandler, DefaultHighlighter, DefaultHinter, FileBackedHistory, Reedline, Signal};
 use std::string::String;
 #[cfg(unix)]
 use libc::{SIG_DFL, SIGINT, SIGQUIT};
@@ -15,11 +15,13 @@ use print::*;
 use yansi::Paint;
 use crate::builtin::*;
 use crate::config::config_dir;
+use crate::panics::attach_cosh_panic_handler;
 
 mod print;
 mod builtin;
 mod config;
 mod permission;
+mod panics;
 
 pub const HEADER: &str = r#"
                   _
@@ -41,6 +43,7 @@ fn main() {
             )
         )
     );
+    attach_cosh_panic_handler();
     // /*FIXME_later*/ let config = load_config();
     let coshf_history: PathBuf = config_dir().join(".cosh-history");
     let history_str = coshf_history.to_string_lossy().to_string().replace("\\", "/");
@@ -48,6 +51,9 @@ fn main() {
     let exe_vec = autocomplete_targets();
     let mut rl = Reedline::create()
         .unwrap()
+        .with_completion_action_handler(
+            Box::new(DefaultCompletionActionHandler::default().with_completer(Box::new(DefaultCompleter::new(exe_vec.clone()))))
+        )
         .with_history(Box::new(history))
         .unwrap()
         .with_hinter(Box::new(
@@ -62,8 +68,8 @@ fn main() {
                 if may_have_comments.is_empty() {
                     continue;
                 }
-                may_have_comments.split("#").next().unwrap();
-                let mut parts = may_have_comments.split("#").next().unwrap().split_whitespace();
+                let no_comments = may_have_comments.split("#").next().unwrap();
+                let mut parts = no_comments.split_whitespace();
                 let p = parts.next();
                 let command : &str;
                 match p {
@@ -76,6 +82,9 @@ fn main() {
                 match command {
                     "autocp" => {
                         println!("cosh: use `autocp-ref` to refresh autocompletion indexes.");
+                    }
+                    "panic" => {
+                        panic!("{}", format!("debug panic - {}", no_comments));
                     }
                     "autocp-ref" => {
                         rl = Reedline::create()
