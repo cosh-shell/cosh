@@ -7,12 +7,13 @@ use std::str::SplitWhitespace;
 use clearscreen::clear;
 use reedline::{DefaultCompleter, DefaultHighlighter, DefaultHinter, FileBackedHistory, Reedline, Signal};
 use std::string::String;
-use libc::{SIG_DFL, SIGINT};
+#[cfg(unix)]
+use libc::{SIG_DFL, SIGINT, SIGQUIT};
 use nu_ansi_term::Color::DarkGray;
 use nu_ansi_term::{Color, Style};
 use print::*;
 use yansi::Paint;
-use crate::builtin::{autocomplete_targets, ls};
+use crate::builtin::*;
 use crate::config::config_dir;
 
 mod print;
@@ -166,18 +167,28 @@ fn main() {
     disable_virtual_terminal_processing();
 }
 
+#[cfg(unix)]
 fn execute_command(command: &str, args: SplitWhitespace) {
-    #[cfg(unix)]
     use std::os::unix::process::CommandExt;
-    let child_temp = Command::new(command).args(args);
-    #[cfg(unix)]
-    child_temp.before_exec(|| {
+    let child = Command::new(command).args(args).before_exec(|| {
         unsafe {
             libc::signal(SIGINT, SIG_DFL);
             libc::signal(SIGQUIT, SIG_DFL);
         }
-    });
-    let child = child_temp.spawn();
+        Ok(())
+    }).spawn();
+    match child {
+        Ok(mut child) => { child.wait().unwrap(); },
+        Err(e) => {
+            err_ln(format!("cosh: {}", e));
+        },
+    };
+}
+
+
+#[cfg(windows)]
+fn execute_command(command: &str, args: SplitWhitespace) {
+    let child = Command::new(command).args(args).spawn();
     match child {
         Ok(mut child) => { child.wait().unwrap(); },
         Err(e) => {
