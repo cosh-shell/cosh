@@ -1,5 +1,5 @@
 # `cosh` Comfortably Shell
-> A *minimal* and *simple* shell written in Rust.
+> A cross-platform and convenient shell written in Rust.
 
 ## Conveniences
 `cosh` now autocompletes to executables in `$PATH`, and `cosh` built-ins are highlighted in
