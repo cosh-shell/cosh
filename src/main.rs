@@ -83,9 +83,6 @@ fn main() {
                     "autocp" => {
                         println!("cosh: use `autocp-ref` to refresh autocompletion indexes.");
                     }
-                    "panic" => {
-                        panic!("{}", format!("debug panic - {}", no_comments));
-                    }
                     "autocp-ref" => {
                         rl = Reedline::create()
                             .unwrap()
